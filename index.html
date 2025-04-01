@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Web App with Drive Upload</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+</head>
+<body class="p-4">
+  <div class="container">
+    <h2>รายงานข้อมูล</h2>
+    <table class="table table-bordered" id="data-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Title</th>
+          <th>Amount</th>
+          <th>Date</th>
+          <th>File</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <hr />
+
+    <h5>เพิ่มข้อมูลพร้อมแนบไฟล์</h5>
+    <form id="uploadForm" enctype="multipart/form-data">
+      <div class="row g-2">
+        <div class="col-md-3"><input type="text" class="form-control" name="title" placeholder="Title" required /></div>
+        <div class="col-md-3"><input type="number" class="form-control" name="amount" placeholder="Amount" required /></div>
+        <div class="col-md-3"><input type="date" class="form-control" name="usedAt" placeholder="Date" required /></div>
+        <div class="col-md-3"><input type="file" class="form-control" name="file" required /></div>
+      </div>
+      <div class="mt-2"><button type="submit" class="btn btn-success">อัปโหลด</button></div>
+    </form>
+  </div>
+
+  <script>
+    const apiUrl = 'https://script.google.com/macros/s/AKfycbyX9bGL2IQ5V7jdjOvokP-whOAfQjOJecfD-ISSTDybLxFhTXthwJuLq88Wd8UqI-92/exec'; // วาง Web App URL ที่ได้จาก Google Apps Script
+
+    async function fetchData() {
+      const res = await fetch(apiUrl).then(response => response.json())
+  .then(data => console.log(data))
+  .catch(error => console.error("Error:", error));
+      const data = await res.json();
+      const tbody = document.querySelector("#data-table tbody");
+      tbody.innerHTML = '';
+      data.forEach(row => {
+        tbody.innerHTML += `
+          <tr>
+            <td>${row.ID}</td>
+            <td>${row.Title}</td>
+            <td>${row.Amount}</td>
+            <td>${row.UsedAt}</td>
+            <td><a href="${row.FileURL}" target="_blank">ไฟล์แนบ</a></td>
+            <td>
+              <button class="btn btn-sm btn-danger" onclick="deleteEntry('${row.ID}')">ลบ</button>
+            </td>
+          </tr>`;
+      });
+    }
+
+    async function deleteEntry(id) {
+      if (!confirm("ยืนยันการลบ?")) return;
+      await fetch(apiUrl, {
+        method: 'DELETE',
+        body: JSON.stringify({ ID: id }),
+        headers: { 'Content-Type': 'application/json' }
+      });
+      fetchData();
+    }
+
+    document.getElementById('uploadForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const form = e.target;
+      const formData = new FormData(form);
+      const res = await fetch(apiUrl, { method: 'POST', body: formData });
+      const result = await res.text();
+      alert(result);
+      form.reset();
+      fetchData();
+    });
+
+    fetchData();
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
